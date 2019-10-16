@@ -1,0 +1,67 @@
+#############################
+#
+#Auto Scaling Group
+# - Launch Configuration
+# - Template File
+# - Autoscaling Group
+# - Security Group
+# - Sec Grp rules
+#############################
+
+
+
+data "template_file" "dm_custom_userdata_ds" {
+  template = "${file("${path.module}/templates/userdata.sh")}"
+}
+
+data "template_cloudinit_config" "dm_userd_cloud_ds" {
+  gzip          = true
+  base64_encode = true
+
+  part {
+    content_type = "text/x-shellscript"
+    content      = "${data.template_file.dm_custom_userdata_ds.rendered}"
+  }
+}
+
+
+###################### Launch Configuration######
+
+resource "aws_launch_configuration" "tf-webapp-res" {
+  name_prefix       = "webapp-"
+  image_id          = "ami-0eab3a90fc693af19"
+  instance_type     = "t2.medium"
+  key_name          = "ExerciseA"
+  enable_monitoring = true
+  security_groups   = ["${aws_security_group.allow_from_webapps_to_web_servers.id}"]
+
+  user_data = "${data.template_cloudinit_config.dm_userd_cloud_ds.rendered}"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+}
+
+resource "aws_autoscaling_group" "tf-webapp-asg-res" {
+  name                 = "${aws_launch_configuration.tf-webapp-res.id}-asg"
+  min_size             = "1"
+  max_size             = "1"
+  desired_capacity     = "1"
+  health_check_type    = "EC2"
+  launch_configuration = "${aws_launch_configuration.tf-webapp-res.id}"
+  vpc_zone_identifier  = "${aws_subnet.tf-ecomm-sub-PRIVATE.*.id}"
+  count                = "${length(var.availability_zones)}"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  # tags = {
+  #   Name   = ["webapps","server"]
+}
+
+#tags = {
+# ["name"]
+
+

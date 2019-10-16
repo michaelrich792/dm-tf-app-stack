@@ -1,0 +1,22 @@
+resource "aws_s3_bucket" "dm_tf_michael" {
+  bucket = "dm-tf-testing-mr"
+  acl    = "private"
+
+  tags = {
+    Name        = "My bucket"
+    Environment = "Dev"
+  }
+}
+
+
+resource "aws_s3_bucket" "dm_tf_michael_2" {
+  bucket = "dm-tf-testing-mr-2"
+  acl    = "private"
+
+  tags = {
+    Name        = "2dfskjlsdfkjlfdlkjlkfdj sfdlkjsfdlkjsfdlkjfsdlkj"
+    Environment = "Dev"
+    Michael     = "Michael Richardson tagging this from the terraform script"
+
+  }
+}
